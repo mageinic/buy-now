@@ -1,0 +1,109 @@
+<?php
+/**
+ * MageINIC
+ * Copyright (C) 2023 MageINIC <support@mageinic.com>
+ *
+ * NOTICE OF LICENSE
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see https://opensource.org/licenses/gpl-3.0.html.
+ *
+ * Do not edit or add to this file if you wish to upgrade this extension to newer
+ * version in the future.
+ *
+ * @category MageINIC
+ * @package MageINIC_BuyNow
+ * @copyright Copyright (c) 2023 MageINIC (https://www.mageinic.com/)
+ * @license https://opensource.org/licenses/gpl-3.0.html GNU General Public License,version 3 (GPL-3.0)
+ * @author MageINIC <support@mageinic.com>
+ */
+
+use MageINIC\BuyNow\ViewModel\BuyNow;
+use Magento\Wishlist\Block\Customer\Wishlist\Item\Column\Cart;
+use Magento\Wishlist\Model\Item;
+use Magento\Wishlist\ViewModel\AllowedQuantity;
+use Magento\Framework\Escaper;
+
+/**
+ * @var $block Cart
+ * @var $viewModel BuyNow
+ * @var $qtyViewModel AllowedQuantity
+ * @var $escaper Escaper
+ * @var $item Item
+ */
+
+$viewModel = $block->getData('viewModel');
+$helper = $viewModel->getBuyNowHelper();
+$isModuleEnable = $helper->isEnable();
+$buttonTitle = $helper->getButtonTitle();
+$buyNow = $helper->isEnableWishlistProduct();
+$item = $block->getItem();
+$product = $item->getProduct();
+$qtyViewModel = $block->getData('allowedQuantityViewModel');
+$allowedQty = $qtyViewModel->setItem($item)->getMinMaxQty();
+?>
+<?php foreach ($block->getChildNames() as $childName): ?>
+    <?= /* @noEscape */ $block->getLayout()->renderElement($childName, false) ?>
+<?php endforeach;?>
+<div class="box-tocart">
+    <fieldset class="fieldset">
+        <?php if ($item->canHaveQty() && $product->isVisibleInSiteVisibility()): ?>
+            <div class="field qty">
+                <label class="label" for="qty[<?= $escaper->escapeHtmlAttr($item->getId()) ?>]">
+                    <span><?= $escaper->escapeHtml(__('Qty')) ?></span>
+                </label>
+                <div class="control">
+                    <input type="number" data-role="qty" id="qty[<?= $escaper->escapeHtmlAttr($item->getId()) ?>]"
+                           class="input-text qty"
+                           data-validate="{'required-number':true,'validate-greater-than-zero':true,
+                           'validate-item-quantity':{'minAllowed':<?= /* @noEscape */ $allowedQty['minAllowed'] ?>,
+                           'maxAllowed':<?= $escaper->escapeHtmlAttr($allowedQty['maxAllowed']) ?>}}"
+                           name="qty[<?= $escaper->escapeHtmlAttr($item->getId()) ?>]"
+                           value="<?= $escaper->escapeHtmlAttr((int)($block->getAddToCartQty($item) * 1)) ?>"
+                        <?= $product->isSaleable() ? '' : 'disabled="disabled"' ?>>
+                </div>
+            </div>
+        <?php endif; ?>
+        <?php if ($product->isSaleable()): ?>
+            <div class="product-item-actions">
+                <div class="actions-primary">
+                        <button type="button"
+                                data-role="tocart"
+                                data-post='<?= $escaper->escapeHtmlAttr($block->getItemAddToCartParams($item)) ?>'
+                                title="<?= $escaper->escapeHtmlAttr(__('Add to Cart')) ?>"
+                                data-item-id="<?= $escaper->escapeHtmlAttr($item->getId()) ?>"
+                                class="action tocart primary
+                                <?= /* @noEscape */ $isModuleEnable ? 'mageinic-buynow-custom-tocart' : '' ?>">
+                            <span><?= $escaper->escapeHtml(__('Add to Cart')) ?></span>
+                        </button>
+                    <?php if ($isModuleEnable && $buyNow):?>
+                        <?php $wishlisthelper = $viewModel->getBuyNowWishlistHelper(); ?>
+                        <button type="button"
+                                data-role="tocart"
+                                data-post='<?= $escaper->escapeHtmlAttr($wishlisthelper->getAddToCartParams($item)) ?>'
+                                title="<?= $escaper->escapeHtmlAttr(__($buttonTitle)) ?>"
+                                data-item-id="<?= $escaper->escapeHtmlAttr($item->getId()) ?>"
+                                class="action primary mageinic-buynow-button">
+                            <span><?= $escaper->escapeHtml(__($buttonTitle)) ?></span>
+                        </button>
+                    <?php endif; ?>
+                </div>
+            </div>
+        <?php else: ?>
+            <?php if ($product->getIsSalable()): ?>
+                <p class="available stock" title="<?= $escaper->escapeHtmlAttr(__('Availability')) ?>">
+                    <span><?= $escaper->escapeHtml(__('In stock')) ?></span>
+                </p>
+            <?php else: ?>
+                <p class="unavailable stock" title="<?= $escaper->escapeHtmlAttr(__('Availability')) ?>">
+                    <span><?= $escaper->escapeHtml(__('Out of stock')) ?></span>
+                </p>
+            <?php endif; ?>
+        <?php endif; ?>
+    </fieldset>
+</div>

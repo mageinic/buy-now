@@ -1,0 +1,214 @@
+<?php
+/**
+ * MageINIC
+ * Copyright (C) 2023 MageINIC <support@mageinic.com>
+ *
+ * NOTICE OF LICENSE
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see https://opensource.org/licenses/gpl-3.0.html.
+ *
+ * Do not edit or add to this file if you wish to upgrade this extension to newer
+ * version in the future.
+ *
+ * @category MageINIC
+ * @package MageINIC_BuyNow
+ * @copyright Copyright (c) 2023 MageINIC (https://www.mageinic.com/)
+ * @license https://opensource.org/licenses/gpl-3.0.html GNU General Public License,version 3 (GPL-3.0)
+ * @author MageINIC <support@mageinic.com>
+ * phpcs:ignoreFile
+ */
+
+use Magento\Catalog\Block\Product\Compare\ListCompare;
+use MageINIC\BuyNow\ViewModel\BuyNow;
+use Magento\Catalog\Model\Product;
+use Magento\Framework\Escaper;
+
+/**
+ * @var $block ListCompare
+ * @var $viewModel BuyNow
+ * @var $escaper Escaper
+ */
+
+$viewModel = $block->getData('viewModel');
+$helper = $viewModel->getBuyNowHelper();
+$isModuleEnable = $helper->isEnable();
+$buttonTitle = $helper->getButtonTitle();
+$total = $block->getItems()->getSize();
+$buyNow = $helper->isEnableCompareProduct();
+?>
+<?php if ($total): ?>
+    <a href="#" class="action print hidden-print"
+       title="<?= $escaper->escapeHtmlAttr(__('Print This Page')) ?>">
+        <span><?= $escaper->escapeHtml(__('Print This Page')) ?></span>
+    </a>
+    <div class="table-wrapper comparison">
+        <table class="data table table-comparison" id="product-comparison"
+               data-mage-init='{"compareList":{
+                    "windowPrintSelector":".action.print",
+                    "productsInRow":"5",
+                    "selectors":{"productAddToCartSelector":"button.action.tocart"}}}'>
+            <caption class="table-caption">
+                <?= $escaper->escapeHtml(__('Compare Products')) ?>
+            </caption>
+            <thead>
+                <tr>
+                    <?php $index = 0 ?>
+                    <?php foreach ($block->getItems() as $item): ?>
+                        <?php if ($index++ == 0): ?>
+                            <th scope="row" class="cell label remove">
+                                <span><?= $escaper->escapeHtml(__('Remove Product')) ?></span>
+                            </th>
+                        <?php endif; ?>
+                        <td class="cell remove product hidden-print">
+                            <?php $compareHelper = $viewModel->getCompareHelper(); ?>
+                            <a href="#"
+                               data-post='<?= $escaper->escapeHtmlAttr($compareHelper->getPostDataRemove($item)) ?>'
+                               class="action delete" title="<?= $escaper->escapeHtmlAttr(__('Remove Product')) ?>">
+                                <span><?= $escaper->escapeHtml(__('Remove Product')) ?></span>
+                            </a>
+                        </td>
+                    <?php endforeach; ?>
+                </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <?php $index = 0; ?>
+                <?php $helper = $viewModel->getOutputHelper(); ?>
+                <?php /** @var $item Product */ ?>
+                <?php foreach ($block->getItems() as $item): ?>
+                    <?php if ($index++ == 0): ?>
+                        <th scope="row" class="cell label product">
+                            <span><?= $escaper->escapeHtml(__('Product')) ?></span>
+                        </th>
+                    <?php endif; ?>
+                    <td data-th="<?= $escaper->escapeHtml(__('Product')) ?>" class="cell product info">
+                        <a class="product-item-photo"
+                           href="<?= $escaper->escapeHtmlAttr(__($block->getProductUrl($item))) ?>"
+                           title="<?= $escaper->escapeHtmlAttr(__($block->stripTags(
+                               $item->getName(), null, true))) ?>">
+                            <?= $block->getImage($item, 'product_comparison_list')->toHtml() ?>
+                        </a>
+                        <strong class="product-item-name">
+                            <a href="<?= $escaper->escapeUrl($block->getProductUrl($item)) ?>"
+                               title="<?= $escaper->escapeHtmlAttr(__($block->stripTags(
+                                   $item->getName(), null, true))) ?>">
+                                <?= /* @noEscape */ $helper->productAttribute($item, $item->getName(), 'name') ?>
+                            </a>
+                        </strong>
+                        <?= $block->getReviewsSummaryHtml($item, 'short') ?>
+                        <?= /* @noEscape */ $block->getProductPrice($item, '-compare-list-top') ?>
+                        <div class="product-item-actions hidden-print">
+                            <div class="actions-primary">
+                                <?php if ($item->isSaleable()): ?>
+                                    <form data-role="tocart-form"
+                                          id="product_addtocart_form_<?= $escaper->escapeHtmlAttr($item->getEntityId()) ?>"
+                                          action="<?= $escaper->escapeHtmlAttr($viewModel->getCompareHelper()->getAddToCartUrl(
+                                              $item)) ?>" method="post">
+                                        <?= $block->getBlockHtml('formkey') ?>
+                                        <button type="submit" class="action tocart primary">
+                                            <span><?= $escaper->escapeHtml(__('Add to Cart')) ?></span>
+                                        </button>
+                                        <?php if ($isModuleEnable && $buyNow): ?>
+                                            <?php $formId = "#product_addtocart_form_" . $item->getEntityId(); ?>
+                                                <button type="button"
+                                                        title="<?= $escaper->escapeHtmlAttr(__($buttonTitle)) ?>"
+                                                        class="action primary mageinic-buynow-button"
+                                                        data-mage-init='{
+                                                                "MageINIC_BuyNow/js/buy-now": {
+                                                                    "form": "<?= /* @noEscape */ $formId; ?>"
+                                                                }
+                                                            }'>
+                                                    <span><?= $escaper->escapeHtml(__($buttonTitle)) ?></span>
+                                                </button>
+                                            </div>
+                                        <?php endif; ?>
+                                    </form>
+                                <?php else: ?>
+                                    <?php if ($item->isAvailable()): ?>
+                                        <div class="stock available">
+                                            <span><?= $escaper->escapeHtml(__('In stock')) ?></span>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="stock unavailable">
+                                            <span><?= $escaper->escapeHtml(__('Out of stock')) ?></span>
+                                        </div>
+                                    <?php endif; ?>
+                                <?php endif; ?>
+                            </div>
+                            <?php if ($viewModel->getWishlistHelper()->isAllow()): ?>
+                                <div class="secondary-addto-links actions-secondary" data-role="add-to-links">
+                                    <a href="#"
+                                       data-post='<?= $escaper->escapeHtmlAttr($block->getAddToWishlistParams($item)) ?>'
+                                       class="action towishlist" data-action="add-to-wishlist">
+                                        <span><?= $escaper->escapeHtml(__('Add to Wish List')) ?></span>
+                                    </a>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </td>
+                <?php endforeach; ?>
+            </tr>
+            </tbody>
+            <tbody>
+            <?php foreach ($block->getAttributes() as $attribute): ?>
+                <?php $index = 0; ?>
+                <?php if ($block->hasAttributeValueForProducts($attribute)): ?>
+                    <tr>
+                        <?php foreach ($block->getItems() as $item): ?>
+                            <?php if ($index++ == 0): ?>
+                                <th scope="row" class="cell label">
+                                        <span class="attribute label">
+                                            <?= $escaper->escapeHtml($attribute->getStoreLabel() ?
+                                                $attribute->getStoreLabel() : __($attribute->getFrontendLabel())) ?>
+                                        </span>
+                                </th>
+                            <?php endif; ?>
+                            <td class="cell product attribute">
+                                <div class="attribute value">
+                                    <?php switch ($attribute->getAttributeCode()) {
+                                        case "price": ?>
+                                            <?= /* @noEscape */ $block->getProductPrice(
+                                                $item, '-compare-list-' . $attribute->getCode()
+                                            ) ?>
+                                            <?php break;
+                                        case "small_image": ?>
+                                            <?php $block->getImage($item, 'product_small_image')->toHtml(); ?>
+                                            <?php break;
+                                        default:
+                                            ?>
+                                            <?php if (is_string($block->getProductAttributeValue($item, $attribute))): ?>
+                                            <?= /* @noEscape */ $helper->productAttribute(
+                                                $item, $block->getProductAttributeValue($item, $attribute
+                                                ), $attribute->getAttributeCode()) ?>
+                                        <?php endif; ?>
+                                            <?php break;
+                                    } ?>
+                                </div>
+                            </td>
+                        <?php endforeach; ?>
+                    </tr>
+                <?php endif; ?>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php if (!$block->isRedirectToCartEnabled()): ?>
+        <script type="text/x-magento-init">
+            {
+                "[data-role=tocart-form]": {
+                    "catalogAddToCart": {}
+                }
+            }
+        </script>
+    <?php endif; ?>
+<?php else: ?>
+    <div class="message info empty">
+        <div><?= $escaper->escapeHtml(__('You have no items to compare.')) ?></div>
+    </div>
+<?php endif; ?>
