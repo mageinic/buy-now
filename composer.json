@@ -1,6 +1,6 @@
 {
     "name": "mageinic/buynow",
-    "description": "Buy Now module would allow customers to add products to their cart and proceed directly to the checkout process in a single step, skipping the usual shopping cart page.",
+    "description": "Buy Now by MageINIC, Buy Now extension streamlines the shopping process by offering a convenient Buy Now button. This feature allows customers to make quick purchases with a single click, directing them straight to the checkout page. Admins have the flexibility to enable or disable this functionality, customize the button label, and specify where it appears on website.",
     "require": {
         "php": "^8.0",
         "mageinic/core": "1.0.*",
@@ -10,7 +10,8 @@
     "type": "magento2-module",
     "version": "1.0.0",
     "license": [
-        "Commercial"
+        "OSL-3.0",
+        "AFL-3.0"
     ],
     "authors": [
         {
