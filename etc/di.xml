@@ -36,13 +36,4 @@
     <type name="Magento\CatalogWidget\Block\Product\ProductsList">
         <plugin name="set_view_model" type="MageINIC\BuyNow\Plugin\Configurable\ViewModel" sortOrder="1"/>
     </type>
-        <type name="MageINIC\BuyNow\Plugin\Widget">
-            <arguments>
-                <argument name="viewModel" xsi:type="object">MageINIC\BuyNow\ViewModel\BuyNow
-                </argument>
-            </arguments>
-        </type>
-        <type name="Magento\Catalog\Block\Product\Widget\NewWidget">
-            <plugin name="custom_new_products_widget" type="MageINIC\BuyNow\Plugin\Widget" sortOrder="2"/>
-        </type>
 </config>

@@ -11,7 +11,7 @@
 Run the following command in Magento 2 root folder
 
 ```
-composer require mageinic/buynow
+composer require mageinic/buy-now
 
 php bin/magento maintenance:enable
 php bin/magento setup:upgrade
